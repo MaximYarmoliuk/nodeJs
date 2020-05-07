@@ -1,28 +1,45 @@
-const contactsFunc = require('./contacts')
+import express from "express";
+import cors from "cors";
+require("dotenv").config();
+const morgan = require("morgan");
+import { contactsRouter } from "./contacts/contacts.router";
 
-const argv = require('yargs').argv;
+export class ContactsServer {
+  constructor() {
+    this.server = null;
+  }
+  start() {
+    this.initServer();
+    this.initMiddlewares();
+    this.initRoutes();
+    this.handleErrors();
+    this.startListening();
+  }
 
-function invokeAction({ action, id, name, email, phone }) {
-  switch (action) {
-    case 'list':
-        contactsFunc.listContacts()
-      break;
+  initServer() {
+    this.server = express();
+  }
 
-    case 'get':
-        contactsFunc.getContactById(id)
-      break;
+  initMiddlewares() {
+    this.server.use(express.json());
+    this.server.use(cors({ origin: "http://localhost:3000" }));
+    this.server.use(morgan("tiny"));
+  }
 
-    case 'add':
-       contactsFunc.addContact(name, email, phone)
-      break;
+  initRoutes() {
+    this.server.use("/contacts", contactsRouter);
+  }
 
-    case 'remove':
-        contactsFunc.removeContact(id)
-      break;
+  handleErrors() {
+    this.server.use((err, req, res, next) => {
+      delete err.stack;
+      return res.status(err.status).send(`${err.name}: ${err.message}`);
+    });
+  }
 
-    default:
-      console.warn('\x1B[31m Unknown action type!');
+  startListening() {
+    this.server.listen(process.env.PORT, () => {
+      console.log("Server started listening on port", process.env.PORT);
+    });
   }
 }
-
-invokeAction(argv);
