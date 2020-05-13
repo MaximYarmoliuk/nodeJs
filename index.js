@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 import cors from "cors";
 import path from "path";
 import morgan from "morgan";
@@ -9,13 +9,13 @@ export class ContactsServer {
   constructor() {
     this.server = null;
   }
-  
+
   async start() {
     this.initServer();
     this.initMiddlewares();
+    await this.initDatabase();
     this.initRoutes();
     this.handleErrors();
-    await this.initDatabase();
     this.startListening();
   }
 
@@ -29,6 +29,16 @@ export class ContactsServer {
     this.server.use(morgan("tiny"));
   }
 
+  async initDatabase() {
+    try {
+      await mongoose.connect(process.env.MONGO_DB_URL);
+      console.log("Database connection successful");
+    } catch (err) {
+      console.log("MongoDB connection error", err);
+      process.exit(1);
+    }
+  }
+
   initRoutes() {
     this.server.use("/contacts", contactsRouter);
   }
@@ -38,16 +48,6 @@ export class ContactsServer {
       delete err.stack;
       return res.status(err.status).send(`${err.name}: ${err.message}`);
     });
-  }
-
-  async initDatabase() {
-    try {
-      await mongoose.connect(process.env.MONGO_DB_URL);
-      console.log("Database connection successful")
-    } catch (err) {
-      console.log("MongoDB connection error", err);
-      process.exit(1);
-    }
   }
 
   startListening() {
