@@ -1,16 +1,19 @@
-import express from "express";
+const express = require("express");
 import cors from "cors";
-require("dotenv").config();
-const morgan = require("morgan");
+import path from "path";
+import morgan from "morgan";
+import mongoose from "mongoose";
 import { contactsRouter } from "./contacts/contacts.router";
 
 export class ContactsServer {
   constructor() {
     this.server = null;
   }
-  start() {
+
+  async start() {
     this.initServer();
     this.initMiddlewares();
+    await this.initDatabase();
     this.initRoutes();
     this.handleErrors();
     this.startListening();
@@ -22,8 +25,18 @@ export class ContactsServer {
 
   initMiddlewares() {
     this.server.use(express.json());
-    this.server.use(cors({ origin: "http://localhost:3000" }));
+    this.server.use("/static", express.static(path.join(__dirname, "static")));
     this.server.use(morgan("tiny"));
+  }
+
+  async initDatabase() {
+    try {
+      await mongoose.connect(process.env.MONGO_DB_URL);
+      console.log("Database connection successful");
+    } catch (err) {
+      console.log("MongoDB connection error", err);
+      process.exit(1);
+    }
   }
 
   initRoutes() {

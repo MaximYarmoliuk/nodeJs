@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node start.js",
-    "dev": "nodemon start.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,10 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "joi": "^14.3.1",
+    "mongodb": "^3.5.7",
+    "mongoose": "^5.9.13",
     "morgan": "^1.10.0",
+    "path": "^0.12.7",
     "uuidv4": "^6.0.8",
     "yargs": "^15.3.1"
   }
