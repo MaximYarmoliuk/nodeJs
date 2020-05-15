@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
+
 const { ObjectId } = mongoose.Types;
 
 const contactSchema = new Schema({
@@ -16,12 +18,17 @@ contactSchema.statics.addContact = addContact;
 contactSchema.statics.updateContact = updateContact;
 contactSchema.statics.deleteContact = deleteContact;
 
+contactSchema.plugin(mongoosePaginate);
+
 async function addContact(contactParams) {
   return this.create(contactParams);
 }
 
-async function getContacts() {
-  return this.find();
+async function getContacts(sub, skip, limit) {
+  if (!sub){
+    return this.find().skip(skip).limit(limit);
+  }
+  return this.find({ subscription: sub }).skip(skip).limit(limit);
 }
 
 async function getContactById(contactId) {

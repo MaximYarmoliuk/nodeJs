@@ -1,13 +1,39 @@
 import Joi from "joi";
 import { contactModel } from "./contacts.model";
-import { NotFound, EmptyRequiredField } from "../helpers/error.constructors";
+import {
+  NotFound,
+  EmptyRequiredField,
+  QueryErr,
+} from "../helpers/error.constructors";
 import { createControllerProxy } from "../helpers/controllerProxy";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 class ContactsController {
   async getContacts(req, res, next) {
-    const contacts = await contactModel.getContacts();
+    try {
+      let { sub, page, limit } = req.query;
+      limit = Number(limit);
+      page = Number(page);
+      const skip = limit * (Number(page) - 1);
 
-    return res.status(200).json(contacts);
+      if (page <= 0) {
+        throw new QueryErr("Value of page must be greater than zero");
+      }
+
+      if (limit === 0) {
+        throw new QueryErr("Value of limit can not be equal to zero");
+      }
+
+      if (sub !== "free" && sub !== "pro" && sub !== "premium" && sub!== undefined) {
+        throw new QueryErr("Value of sub can be only free, pro or premium");
+      }
+
+      const contacts = await contactModel.getContacts(sub, skip, limit);
+
+      return res.status(200).json(contacts);
+    } catch (error) {
+      next(error);
+    }
   }
 
   async getContactById(req, res, next) {
@@ -73,7 +99,7 @@ class ContactsController {
       phone: Joi.string(),
       subscription: Joi.string(),
       password: Joi.string(),
-      token: Joi.string()
+      token: Joi.string(),
     });
 
     const result = Joi.validate(req.body, updateContactRules);
@@ -85,22 +111,26 @@ class ContactsController {
     next();
   }
 
-  validateAddContact(req, res, next) {
-    const addContactRules = Joi.object({
-      name: Joi.string().required(),
-      email: Joi.string().required(),
-      phone: Joi.string().required(),
-      subscription: Joi.string().required(),
-      password: Joi.string().required(),
-      token: Joi.string().required()
-    });
+  async validateAddContact(req, res, next) {
+    try {
+      const addContactRules = Joi.object({
+        name: Joi.string().required(),
+        email: Joi.string().required(),
+        phone: Joi.string().required(),
+        subscription: Joi.string().required(),
+        password: Joi.string().required(),
+        token: Joi.string().required(),
+      });
 
-    const result = Joi.validate(req.body, addContactRules);
-    if (result.error) {
-      throw new EmptyRequiredField("missing required name field");
+      const result = Joi.validate(req.body, addContactRules);
+      if (result.error) {
+        throw new EmptyRequiredField("missing required name field");
+      }
+
+      next();
+    } catch (error) {
+      next(error);
     }
-
-    next();
   }
 
   async getContact(contactId) {
@@ -111,7 +141,6 @@ class ContactsController {
 
     return contactFound;
   }
-
 }
 
 export const contactsController = createControllerProxy(
