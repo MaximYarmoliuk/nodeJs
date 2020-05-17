@@ -4,6 +4,8 @@ import path from "path";
 import morgan from "morgan";
 import mongoose from "mongoose";
 import { contactsRouter } from "./contacts/contacts.router";
+import { authRouter } from "./auth/auth.router";
+import { usersRouter } from "./users/users.router";
 
 export class ContactsServer {
   constructor() {
@@ -15,7 +17,7 @@ export class ContactsServer {
     this.initMiddlewares();
     await this.initDatabase();
     this.initRoutes();
-    this.handleErrors();
+    // this.handleErrors();
     this.startListening();
   }
 
@@ -41,6 +43,8 @@ export class ContactsServer {
 
   initRoutes() {
     this.server.use("/contacts", contactsRouter);
+    this.server.use("/auth", authRouter);
+    this.server.use("/users", usersRouter);
   }
 
   handleErrors() {

@@ -17,3 +17,33 @@ export class EmptyRequiredField extends BaseError {
     super("message", message, 400);
   }
 }
+
+export class RegValidErr extends BaseError {
+  constructor(message) {
+    super("message", message, 400);
+  }
+}
+
+export class RegConflictErr extends BaseError {
+  constructor(message) {
+    super("message", message, 409);
+  }
+}
+
+export class UnauthorizedError extends BaseError {
+  constructor(message) {
+    super("message", message, 401);
+  }
+}
+
+export class QueryErr extends BaseError {
+  constructor(message) {
+    super("message", message, 400);
+  }
+}
+
+export class SubscriptionValueError extends BaseError{
+  constructor(message) {
+    super("message", message, 400);
+  }
+}
