@@ -51,8 +51,6 @@ class UsersController {
 
       const folder = "./tmp";
       const COMPRESSING_DESTINATION = "./public/images";
-      console.log(folder);
-      console.log(COMPRESSING_DESTINATION);
 
       await imagemin([`${folder}/${filename}`], {
         destination: COMPRESSING_DESTINATION,
