@@ -1,8 +1,5 @@
 import jwt from "jsonwebtoken";
-import multer from "multer";
 import { promises } from "fs";
-import path from "path";
-import { uuid } from "uuidv4";
 import imagemin from "imagemin";
 import imageminJpegtran from "imagemin-jpegtran";
 import imageminPngquant from "imagemin-pngquant";
@@ -52,9 +49,10 @@ class UsersController {
       const { _id } = req.user;
       const { path, filename } = req.file;
 
-      const folder = "F:/prog/nodeJs/hw-5/nodeJs/tmp";
-      const COMPRESSING_DESTINATION =
-        "F:/prog/nodeJs/hw-5/nodeJs/public/images";
+      const folder = "./tmp";
+      const COMPRESSING_DESTINATION = "./public/images";
+      console.log(folder);
+      console.log(COMPRESSING_DESTINATION);
 
       await imagemin([`${folder}/${filename}`], {
         destination: COMPRESSING_DESTINATION,
