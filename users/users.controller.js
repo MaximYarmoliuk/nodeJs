@@ -1,4 +1,8 @@
 import jwt from "jsonwebtoken";
+import { promises } from "fs";
+import imagemin from "imagemin";
+import imageminJpegtran from "imagemin-jpegtran";
+import imageminPngquant from "imagemin-pngquant";
 import { userModel } from "./users.model";
 import { createControllerProxy } from "../helpers/controllerProxy";
 import {
@@ -35,6 +39,38 @@ class UsersController {
       await userModel.updateUserById(_id, { subscription: subscription });
 
       return res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateUserAvatar(req, res, next) {
+    try {
+      const { _id } = req.user;
+      const { path, filename } = req.file;
+
+      const folder = "./tmp";
+      const COMPRESSING_DESTINATION = "./public/images";
+
+      await imagemin([`${folder}/${filename}`], {
+        destination: COMPRESSING_DESTINATION,
+        plugins: [
+          imageminJpegtran(),
+          imageminPngquant({
+            quality: [0.6, 0.8],
+          }),
+        ],
+      });
+
+      const avatarURL = `http://localhost:3000/images/${filename}`;
+
+      req.file.path = avatarURL;
+
+      await promises.unlink(path);
+
+      await userModel.updateUserById(_id, { avatarURL: avatarURL });
+
+      return res.status(200).json({ avatarURL });
     } catch (error) {
       next(error);
     }

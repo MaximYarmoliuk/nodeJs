@@ -1,12 +1,17 @@
 import Joi from "joi";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import path from "path";
+import fs from "fs";
+import request from "request";
+import { uuid } from "uuidv4";
 import { userModel } from "../users/users.model";
 import { createControllerProxy } from "../helpers/controllerProxy";
 import {
   RegValidErr,
   RegConflictErr,
   UnauthorizedError,
+  CreateAvatarError,
 } from "../helpers/error.constructors";
 
 class AuthController {
@@ -26,15 +31,48 @@ class AuthController {
 
       const passwordHash = await this.hashPassword(password);
 
+      const avatarURL = this.avatarUpload();
+
       const createdUser = await userModel.createUser({
         email,
         passwordHash,
+        avatarURL,
         subscription,
       });
 
       return res.status(201).json({
         user: this.composeUserForResponse(createdUser),
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  avatarUpload() {
+    try {
+      const randomAvatarUrl = "https://loremflickr.com/320/240";
+      const randomAvatarName = `${uuid()}.jpg`;
+
+      request.get({ url: `${randomAvatarUrl}`, encoding: "binary" }, function (
+        err,
+        response,
+        body
+      ) {
+        fs.writeFile(
+          path.join(__dirname, `../public/images/${randomAvatarName}`),
+          body,
+          "binary",
+          function (err) {
+            if (err) {
+              throw new CreateAvatarError("Error creating random avatar");
+            }
+          }
+        );
+      });
+
+      const avatarURL = `http://localhost:3000/images/${randomAvatarName}`;
+
+      return avatarURL;
     } catch (err) {
       next(err);
     }
@@ -60,7 +98,7 @@ class AuthController {
       }
 
       const token = this.createToken(user._id);
-      
+
       await userModel.updateUserById(user._id, { token });
 
       return res.status(200).json({
@@ -85,7 +123,6 @@ class AuthController {
         throw new UnauthorizedError("Not authorized");
       }
 
-      console.log("userId", userId);
       const user = await userModel.findUserById(userId);
 
       if (!user) {
@@ -163,6 +200,7 @@ class AuthController {
     return {
       email: user.email,
       subscription: user.subscription,
+      avatarURL: user.avatarURL,
     };
   }
 

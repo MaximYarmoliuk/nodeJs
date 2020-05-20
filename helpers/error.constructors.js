@@ -42,8 +42,14 @@ export class QueryErr extends BaseError {
   }
 }
 
-export class SubscriptionValueError extends BaseError{
+export class SubscriptionValueError extends BaseError {
   constructor(message) {
     super("message", message, 400);
+  }
+}
+
+export class CreateAvatarError extends BaseError {
+  constructor(message) {
+    super("message", message, 501);
   }
 }

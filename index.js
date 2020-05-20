@@ -28,6 +28,7 @@ export class ContactsServer {
   initMiddlewares() {
     this.server.use(express.json());
     this.server.use("/static", express.static(path.join(__dirname, "static")));
+    this.server.use("/images", express.static(path.join(__dirname, "/public/images")));
     this.server.use(morgan("tiny"));
   }
 

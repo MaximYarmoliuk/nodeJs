@@ -5,6 +5,7 @@ const { ObjectId } = mongoose.Types;
 const userSchema = new Schema({
   email: String,
   passwordHash: String,
+  avatarURL: String,
   subscription: {
     type: String,
     enum: ["free", "pro", "premium"],
