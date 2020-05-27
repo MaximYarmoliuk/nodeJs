@@ -17,7 +17,7 @@ export class ContactsServer {
     this.initMiddlewares();
     await this.initDatabase();
     this.initRoutes();
-    // this.handleErrors();
+    this.handleErrors();
     this.startListening();
   }
 

@@ -13,4 +13,6 @@ router.post("/login", authController.validateLogin, authController.login);
 
 router.post("/logout", authController.authorization, authController.logout);
 
+router.get("/verify/:verificationToken", authController.verifyUser)
+
 export const authRouter = router;
