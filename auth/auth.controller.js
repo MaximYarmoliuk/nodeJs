@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import request from "request";
 import { uuid } from "uuidv4";
+import sgMail from "@sendgrid/mail";
 import { userModel } from "../users/users.model";
 import { createControllerProxy } from "../helpers/controllerProxy";
 import {
@@ -12,11 +13,13 @@ import {
   RegConflictErr,
   UnauthorizedError,
   CreateAvatarError,
+  NotFound,
 } from "../helpers/error.constructors";
 
 class AuthController {
   constructor() {
     this._saltRounds = 8;
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   }
 
   async registerUser(req, res, next) {
@@ -39,6 +42,8 @@ class AuthController {
         avatarURL,
         subscription,
       });
+
+      this.sendVerificationEmail(createdUser);
 
       return res.status(201).json({
         user: this.composeUserForResponse(createdUser),
@@ -138,6 +143,25 @@ class AuthController {
     }
   }
 
+  async verifyUser(req, res, next) {
+    try {
+      const { verificationToken } = req.params;
+      const userToVerify = await userModel.findByVerificationToken(
+        verificationToken
+      );
+
+      if (!userToVerify) {
+        throw new NotFound("User not found");
+      }
+
+      await userModel.verifyUser(verificationToken);
+
+      return res.status(200).send("User successfully verified");
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async logout(req, res, next) {
     try {
       await userModel.updateUserById(req.user._id, { token: null });
@@ -194,6 +218,17 @@ class AuthController {
 
   async comparePasswordHash(password, passwordHash) {
     return bcryptjs.compare(password, passwordHash);
+  }
+
+  async sendVerificationEmail(user) {
+    const verificationLink = `${process.env.SERVER_BASE_URL}/auth/verify/${user.verificationToken}`;
+
+    await sgMail.send({
+      to: user.email,
+      from: process.env.SENDER_EMAIL,
+      subject: "Please, verify your email",
+      html: `<a href="${verificationLink}">Click to verify</a>`
+    })
   }
 
   composeUserForResponse(user) {
